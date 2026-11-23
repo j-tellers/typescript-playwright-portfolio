@@ -1,0 +1,14 @@
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:v3.31.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MEALIE_HOST_PORT:?Use the environment scripts to supply the Mealie configuration}:9000"
+    environment:
+      ALLOW_SIGNUP: "false"
+      BASE_URL: "${MEALIE_BASE_URL:?Use the environment scripts to supply the Mealie configuration}"
+    volumes:
+      - mealie-data:/app/data
+
+volumes:
+  mealie-data:
