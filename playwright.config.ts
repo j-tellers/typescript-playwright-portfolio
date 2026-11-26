@@ -3,7 +3,7 @@ import { mealieBaseUrl } from './src/config/config';
 
 export default defineConfig({
   testDir: './tests',
-  workers: 1,
+  workers: 2,
   globalSetup: require.resolve('./global-setup'),
   globalTeardown: require.resolve('./global-teardown'),
   use: {
