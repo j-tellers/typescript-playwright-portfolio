@@ -1,12 +1,15 @@
 import { test, expect } from '../../src/fixtures/fixtures';
 import { LoginPage } from '../../src/pages/login.page';
 
-test("Initial login smoke check", async ({ page, mealieBaseUrl }) => {
+test("Administrator login reaches the home page", async ({ page, mealieBaseUrl, mealieCredentials }) => {
   await page.goto(mealieBaseUrl);
+
+  const username = mealieCredentials.username;
+  const password = mealieCredentials.password;
 
   const loginPage = new LoginPage(page);
   await expect.poll(() => loginPage.isLoginVisible()).toBe(true);
 
-  const welcomePage =  await loginPage.loginDefault()
+  await loginPage.login(username, password);
 
 });
