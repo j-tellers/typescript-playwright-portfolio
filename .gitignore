@@ -6,3 +6,4 @@ playwright-report/
 test-results/
 playwright/.auth/
 .github/
+test-reports/

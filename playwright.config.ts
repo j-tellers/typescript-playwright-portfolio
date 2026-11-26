@@ -6,6 +6,7 @@ export default defineConfig({
   workers: 2,
   globalSetup: require.resolve('./global-setup'),
   globalTeardown: require.resolve('./global-teardown'),
+  reporter: [['html', { outputFolder: 'test-reports', open: 'always' }]],
   use: {
     baseURL: mealieBaseUrl,
     viewport: { width: 1920, height: 1080 }
