@@ -13,7 +13,7 @@ if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-& docker compose -f $composeFile stop mealie
+& docker compose -p $mealieComposeProject -f $composeFile stop mealie
 if ($LASTEXITCODE -ne 0) {
     Write-Error 'Mealie could not be stopped. Check the Docker error above and ensure Docker Desktop and Compose are available.'
     exit 1

@@ -1,5 +1,7 @@
 const configuredBaseUrl = 'http://localhost:9925';
 
+export const mealieComposeProject = 'playwright-portfolio-mealie-test';
+
 const parsedBaseUrl = new URL(configuredBaseUrl);
 if (
   parsedBaseUrl.protocol !== 'http:' ||

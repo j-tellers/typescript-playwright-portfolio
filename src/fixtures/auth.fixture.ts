@@ -3,6 +3,7 @@ import { MealieHttpClient } from '../api/clients/mealie-api-client';
 import { HttpError } from '../api/clients/http-client';
 import { mealieBaseUrl } from '../config/config';
 import { test as baseTest, expect } from './environment.fixture';
+import { TrackedMealieHttpClient } from './tracked-mealie-api-client';
 
 // Mealie v3.31.0's publicly documented first-run defaults, for local testing only.
 const defaultCredentials = {
@@ -12,27 +13,26 @@ const defaultCredentials = {
 const defaultEmail = 'changeme@example.com';
 const testEmail = 'portfolio-admin@example.com';
 
-async function authenticatedClient(context: APIRequestContext, baseUrl: string): Promise<MealieHttpClient> {
+async function authenticate(context: APIRequestContext, baseUrl: string): Promise<string> {
   const loginClient = new MealieHttpClient(context, baseUrl);
-  let token: string;
   try {
-    token = await loginClient.login(defaultCredentials);
+    return await loginClient.login(defaultCredentials);
   } catch (error) {
     if (error instanceof HttpError && error.status === 401) {
       throw new Error('Mealie rejected the default administrator login (HTTP 401). Check the test account credentials.');
     }
     throw error;
   }
-  return new MealieHttpClient(context, baseUrl, undefined, {
-    Accept: 'application/json',
-    Authorization: `Bearer ${token}`,
-  });
 }
 
 export async function initializeMealieAdmin(): Promise<void> {
   const context = await request.newContext();
   try {
-    const client = await authenticatedClient(context, mealieBaseUrl);
+    const token = await authenticate(context, mealieBaseUrl);
+    const client = new MealieHttpClient(context, mealieBaseUrl, undefined, {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    });
     const currentUser = (await client.getCurrentUser()).body;
     if (
       typeof currentUser !== 'object' || currentUser === null ||
@@ -61,24 +61,35 @@ export async function initializeMealieAdmin(): Promise<void> {
 }
 
 type AuthFixtures = {
-  mealieAuth: { client: MealieHttpClient; credentials: typeof defaultCredentials };
   mealieApi: MealieHttpClient;
+};
+
+type AuthWorkerFixtures = {
+  mealieAuth: { context: APIRequestContext; token: string; credentials: typeof defaultCredentials };
   mealieCredentials: typeof defaultCredentials;
 };
 
-export const test = baseTest.extend<{}, AuthFixtures>({
+export const test = baseTest.extend<AuthFixtures, AuthWorkerFixtures>({
   mealieAuth: [async ({ mealieBaseUrl }, use) => {
     const context = await request.newContext();
     try {
-      const client = await authenticatedClient(context, mealieBaseUrl);
-      await use({ client, credentials: defaultCredentials });
+      const token = await authenticate(context, mealieBaseUrl);
+      await use({ context, token, credentials: defaultCredentials });
     } finally {
       await context.dispose();
     }
   }, { scope: 'worker' }],
-  mealieApi: [async ({ mealieAuth }, use) => {
-    await use(mealieAuth.client);
-  }, { scope: 'worker', auto: true }],
+  mealieApi: [async ({ mealieAuth, mealieBaseUrl }, use) => {
+    const client = new TrackedMealieHttpClient(mealieAuth.context, mealieBaseUrl, undefined, {
+      Accept: 'application/json',
+      Authorization: `Bearer ${mealieAuth.token}`,
+    });
+    try {
+      await use(client);
+    } finally {
+      await client.cleanupRecipes();
+    }
+  }, { auto: true }],
   mealieCredentials: [async ({ mealieAuth }, use) => {
     await use(mealieAuth.credentials);
   }, { scope: 'worker' }],

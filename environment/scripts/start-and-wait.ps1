@@ -25,13 +25,13 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-& docker compose -f $composeFile up -d mealie
+& docker compose -p $mealieComposeProject -f $composeFile up -d mealie
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Mealie could not start. Check the Docker error above, Docker Compose availability, and whether port $env:MEALIE_HOST_PORT is in use."
     exit 1
 }
 
-$publishedPort = @(& docker compose -f $composeFile port mealie 9000)
+$publishedPort = @(& docker compose -p $mealieComposeProject -f $composeFile port mealie 9000)
 if ($LASTEXITCODE -ne 0 -or $publishedPort.Count -ne 1 -or $publishedPort[0].Trim() -ne $expectedPort) {
     Write-Error "Mealie does not have the expected $expectedPort port mapping. Check the Compose service and, if appropriate, recreate its container without removing the volume."
     exit 1
@@ -61,7 +61,7 @@ while ($timer.Elapsed.TotalSeconds -lt $TimeoutSeconds) {
     }
 }
 
-$serviceStatus = @(& docker compose -f $composeFile ps --format '{{.Name}}: {{.State}} ({{.Status}})' mealie)
+$serviceStatus = @(& docker compose -p $mealieComposeProject -f $composeFile ps --format '{{.Name}}: {{.State}} ({{.Status}})' mealie)
 if ($LASTEXITCODE -ne 0 -or $serviceStatus.Count -eq 0) {
     $serviceStatus = @('Service status unavailable; check Docker Compose.')
 }
