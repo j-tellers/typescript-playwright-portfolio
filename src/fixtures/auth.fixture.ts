@@ -61,7 +61,7 @@ export async function initializeMealieAdmin(): Promise<void> {
 }
 
 type AuthFixtures = {
-  mealieApi: MealieHttpClient;
+  mealieApi: TrackedMealieHttpClient;
 };
 
 type AuthWorkerFixtures = {

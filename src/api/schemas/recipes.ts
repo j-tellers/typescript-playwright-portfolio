@@ -24,6 +24,10 @@ export interface RecipePatchRequest {
   settings?: { public?: boolean; showNutrition?: boolean } | null;
 }
 
+export interface RecipeReplaceRequest extends RecipePatchRequest {
+  name: string;
+}
+
 export interface BasicRecipe extends RecipePatchRequest {
   name: string;
   recipeIngredient: { quantity: number; note: string }[];

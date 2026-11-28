@@ -5,6 +5,7 @@ const uuidV4Pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[
 
 export class TrackedMealieHttpClient extends MealieHttpClient {
   private readonly recipeIds = new Set<string>();
+  private readonly createdRecipeIds = new Map<string, string>();
 
   override async createRecipe(...args: Parameters<MealieHttpClient['createRecipe']>) {
     const response = await super.createRecipe(...args);
@@ -24,7 +25,16 @@ export class TrackedMealieHttpClient extends MealieHttpClient {
       throw new Error('Created recipe did not return a valid ID; the recipe could not be tracked.');
     }
     this.recipeIds.add(recipe.id);
+    this.createdRecipeIds.set(response.body, recipe.id);
     return response;
+  }
+
+  getCreatedRecipeId(slug: string): string {
+    const id = this.createdRecipeIds.get(slug);
+    if (!id) {
+      throw new Error('No tracked recipe ID found for the creation slug.');
+    }
+    return id;
   }
 
   async cleanupRecipes(): Promise<void> {

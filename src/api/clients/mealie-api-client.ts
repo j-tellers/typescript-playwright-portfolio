@@ -4,6 +4,7 @@ import type { APIRequestContext } from "@playwright/test";
 import type {
     RecipeCreateRequest,
     RecipePatchRequest,
+    RecipeReplaceRequest,
 } from "../schemas/recipes";
 
 interface MealieUser {
@@ -26,16 +27,24 @@ export class MealieHttpClient extends HttpClient {
         return this.post<unknown>("/api/recipes", body, options);
     }
 
-    patchRecipe(slug: string, body: RecipePatchRequest, options?: RecipeRequestOptions) {
-        return this.patch<unknown>(`/api/recipes/${encodeURIComponent(slug)}`, body, options);
+    patchRecipe(id: string, body: RecipePatchRequest, options?: RecipeRequestOptions) {
+        return this.patch<unknown>(`/api/recipes/${encodeURIComponent(id)}`, body, options);
     }
 
-    getRecipe(slug: string, options?: Omit<RequestOptions, "body">) {
-        return this.get<unknown>(`/api/recipes/${encodeURIComponent(slug)}`, options);
+    replaceRecipe(id: string, body: RecipeReplaceRequest, options?: RecipeRequestOptions) {
+        return this.put<unknown>(`/api/recipes/${encodeURIComponent(id)}`, body, options);
     }
 
-    deleteRecipe(slug: string, options?: Omit<RequestOptions, "body">) {
-        return this.delete(`/api/recipes/${encodeURIComponent(slug)}`, options);
+    getRecipe(idOrSlug: string, options?: Omit<RequestOptions, "body">) {
+        return this.get<unknown>(`/api/recipes/${encodeURIComponent(idOrSlug)}`, options);
+    }
+
+    getRecipeBySlug(slug: string, options?: Omit<RequestOptions, "body">) {
+        return this.getRecipe(slug, options);
+    }
+
+    deleteRecipe(id: string, options?: Omit<RequestOptions, "body">) {
+        return this.delete(`/api/recipes/${encodeURIComponent(id)}`, options);
     }
 
     getCurrentUser() {

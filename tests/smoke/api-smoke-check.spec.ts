@@ -1,17 +1,6 @@
-import { test, unauthenticatedTest, expect } from '../../src/fixtures/fixtures';
-import { MealieHttpClient } from '../../src/api/clients/mealie-api-client';
+import { test, expect } from '../../src/fixtures/fixtures';
 import type { BasicRecipe } from '../../src/api/schemas/recipes';
 import { randomUUID } from 'node:crypto';
-
-unauthenticatedTest('initializes the administrator before tests start', async ({ request, mealieBaseUrl }) => {
-  const loginClient = new MealieHttpClient(request, mealieBaseUrl);
-  const token = await loginClient.login({ username: 'admin', password: 'MyPassword' });
-  const client = new MealieHttpClient(request, mealieBaseUrl, undefined, {
-    Authorization: `Bearer ${token}`,
-  });
-
-  expect((await client.getCurrentUser()).body).toMatchObject({ email: 'portfolio-admin@example.com' });
-});
 
 const buildBasicRecipe = (name: string): BasicRecipe => {
   return {
@@ -50,19 +39,20 @@ test.describe('Recipe API smoke check', () => {
     expect(created.status).toBe(201);
     expect(created.body).toEqual(expect.any(String));
     expect(created.body).not.toBe('');
+    
     const createdSlug = created.body as string;
-
-    const patched = await mealieApi.patchRecipe(createdSlug, recipe);
+    const createdId = mealieApi.getCreatedRecipeId(createdSlug);
+    const patched = await mealieApi.patchRecipe(createdId, recipe);
     expect(patched.status).toBe(200);
     expect(patched.body).toMatchObject({
       ...recipe,
       slug: createdSlug,
     });
 
-    expect(await mealieApi.getRecipe(createdSlug)).toMatchObject({ status: 200, body: recipe });
+    expect(await mealieApi.getRecipe(createdId)).toMatchObject({ status: 200, body: recipe });
 
-    expect((await mealieApi.deleteRecipe(createdSlug)).status).toBe(200);
+    expect((await mealieApi.deleteRecipe(createdId)).status).toBe(200);
 
-    expect((await mealieApi.getRecipe(createdSlug, { throwOnError: false })).status).toBe(404);
+    expect((await mealieApi.getRecipe(createdId, { throwOnError: false })).status).toBe(404);
   });
 });
